@@ -27,14 +27,14 @@ def redirect(): # this method gets all users
 
 
 @app.route('/token/', methods=['GET'])
-async def get_token(): # this method gets all users
+def get_token(): # this method gets all users
     if request.method == 'GET':
         print("GET")
-        code = await codes.get()
+        code = codes.get()
         return f'{redirect}?code={code}'
     elif request.method == 'POST':
         print("POST")
-        code = await codes.get()
+        code = codes.get()
         return f'{redirect}?code={code}'
 
 
