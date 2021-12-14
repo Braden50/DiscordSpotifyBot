@@ -5,10 +5,10 @@ import os
 from spotipy.oauth2 import SpotifyClientCredentials
 from api import codes
 import requests
-
+from appSecrets import website_url
 import sys, time
 
-website_url = 'https://braden-discord-bot.herokuapp.com/'
+
 os.environ['SPOTIPY_CLIENT_ID'] = appSecrets.SPOTIFY_ID
 os.environ['SPOTIPY_CLIENT_SECRET'] = appSecrets.SPOTIFY_SECRET
 os.environ['SPOTIPY_REDIRECT_URI'] = website_url #'http://example.com/callback/'
@@ -37,7 +37,6 @@ scopes = [
 ]
 
 scope_str = " ".join(scopes)
-# print(scope_str)
 
 
 class Spotify:
@@ -46,17 +45,21 @@ class Spotify:
         self.auth_manager = SpotifyOAuth(scope=scope_str)
         self.sp = spotipy.Spotify(auth_manager=self.auth_manager)
         
-    
 
     def getAuthUrl(self):
         return self.auth_manager.get_authorize_url()
     
     def authenticate(self, url):
+        print(url)
         code = self.auth_manager.parse_response_code(url)
+        print(code)
         token = self.auth_manager.get_access_token(code)
-        code = sp_oauth.get_auth_response()
+        print(token)
         token = sp_oauth.get_access_token(code, as_dict=False)
-        self.sp.auth = token 
+        self.sp.auth = token
+        user = self.sp.current_user()
+        displayName = user['display_name']
+        return displayName
         # spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
     
 

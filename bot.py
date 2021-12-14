@@ -11,7 +11,11 @@ import urllib.request
 import re
 import random
 import asyncio
+import requests
+
+from appSecrets import website_url
 from spotify import Spotify
+
 
 import time
 
@@ -138,15 +142,17 @@ async def authSpotify(ctx):
 
 @bot.command(name='connectSpotify', help='Connects to spotify')
 async def connectSpotify(ctx, key):
-    if user_id not in spotify_objects:
-        await ctx.send('Error: First, you need to sign in and get an access key by using "authSpotify" command')
-        return
-    try:
-        url_with_token = requests.get(f"{website_url}token?key={key}").text
-    except:
-        print("connectSpotify: Key Error")
     user_id = ctx.message.author.id
+    if user_id not in spotify_objects:
+        await ctx.send('Error: First, you need to sign in and get a specialized access key by using "authSpotify" command')
+        return
+    # try:
+    url_with_token = requests.get(f"{website_url}token?key={key}").text
+    # except:
+    #     print("connectSpotify: Key Error")
     s = spotify_objects[user_id]   # not checking if token needs refresh
+    spotify_name = s.authenticate(url_with_token)
+    await ctx.send(f"Welcome {spotify_name}! Your spotify has been connected!")
 
     
 

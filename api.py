@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 import os
 from queue import Queue
@@ -38,7 +38,7 @@ def get_token(): # this method gets all users
         if key is None:
             return "<h1>Are you lost?</h1>"
         if key not in codes:
-            return "<h1>Stop in the name of love</h1>"
+            return f"<h1>{key}</h1>\n<h3>{codes}</h3>"
         url = codes[key]  
         del codes[key]
         print(123, url)
