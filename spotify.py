@@ -6,7 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 os.environ['SPOTIPY_CLIENT_ID'] = secrets.SPOTIFY_ID
 os.environ['SPOTIPY_CLIENT_SECRET'] = secrets.SPOTIFY_SECRET
-os.environ['SPOTIPY_REDIRECT_URI'] = 'https://google.com'
+os.environ['SPOTIPY_REDIRECT_URI'] = 'https://braden-discord-bot.herokuapp.com/'
 
 
 username = '3bgUrO2zRjKTSVQtuxAndA'
