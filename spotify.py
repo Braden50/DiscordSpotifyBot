@@ -63,10 +63,11 @@ class Spotify:
             os.close(r)
             w = os.fdopen(w, 'w')
             print("Parent writing")
-
+            token_url = f"{website_url}token"
+            print(1, token_url)
             string = requests.get(f"{website_url}token").text
             w.write(string)
-            print("Child wrote: ", string)
+            print("Parent wrote: ", string)
             
             
             w.close()

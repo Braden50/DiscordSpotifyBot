@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-import asyncio
+from queue import Queue
 
 
-codes = asyncio.Queue()
+codes = Queue(maxsize=10)
 redirect = 'https://braden-discord-bot.herokuapp.com/'
 os.environ['FLASK_APP'] = 'api.py'
 
