@@ -14,8 +14,6 @@ os.environ['SPOTIPY_CLIENT_SECRET'] = appSecrets.SPOTIFY_SECRET
 os.environ['SPOTIPY_REDIRECT_URI'] = website_url #'http://example.com/callback/'
 
 
-username = '3bgUrO2zRjKTSVQtuxAndA'
-
 scopes = [
     'ugc-image-upload',
     'user-read-playback-state',
@@ -39,50 +37,76 @@ scopes = [
 ]
 
 scope_str = " ".join(scopes)
-print(scope_str)
+# print(scope_str)
 
 
 class Spotify:
     def __init__(self):
         self.token = None
-        self.sp = None
+        self.auth_manager = SpotifyOAuth(scope=scope_str)
+        self.sp = spotipy.Spotify(auth_manager=self.auth_manager)
+        
     
-    def initialize(self):
-        # auth_manager = SpotifyClientCredentials()
-        # try:
-        auth_manager=SpotifyOAuth(scope=scope_str)
-        print("HEREHEHHEHRH")
-        #-----------------------------------------------------
-        r, w = os.pipe()
-      
-        #Creating child process using fork
-        processid = os.fork()
-        if processid:
-            # This is the parent process
-            # Closes file descriptor w
-            os.close(r)
-            w = os.fdopen(w, 'w')
-            print("Parent writing")
-            token_url = f"{website_url}token"
-            print(1, token_url)
-            string = requests.get(f"{website_url}token").text
-            w.write(string)
-            print("Parent wrote: ", string)
-            
-            
-            w.close()
-            os.wait()
 
-        else:
-            # This is the child process
-            os.close(w)
-            r = os.fdopen(r)
-            print("Child reading")
-            # str = r.read()
-            self.sp = spotipy.Spotify(auth_manager=auth_manager)
-            print("WE ABOUT TO GET DOWN")
-            self.sp.current_user()
-            print( "Child read")
+    def getAuthUrl(self):
+        return self.auth_manager.get_authorize_url()
+    
+    def authenticate(self, url):
+        code = self.auth_manager.parse_response_code(url)
+        token = self.auth_manager.get_access_token(code)
+        code = sp_oauth.get_auth_response()
+        token = sp_oauth.get_access_token(code, as_dict=False)
+        self.sp.auth = token 
+        # spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
+    
+
+    # def initialize(self):
+    #     self.auth_manager = SpotifyOAuth(scope=scope_str)
+    #     self.sp = spotipy.Spotify(auth_manager=self.auth_manager)
+
+
+    # def initialize(self):
+    #     # auth_manager = SpotifyClientCredentials()
+    #     # try:
+    #     auth_manager=SpotifyOAuth(scope=scope_str)
+    #     auth_url = auth_manager.get_authorize_url()
+    #     print(auth_url)
+    #     #-----------------------------------------------------
+    #     r, w = os.pipe()
+      
+    #     #Creating child process using fork
+    #     processid = os.fork()
+    #     if processid:
+    #         # This is the parent process
+    #         # Closes file descriptor w
+    #         os.close(r)
+    #         w = os.fdopen(w, 'w')
+            
+    #         print("Parent writing")
+    #         token_url = f"{website_url}token"
+    #         time.sleep(1)
+    #         print(1, token_url)
+    #         string = requests.get(f"{website_url}token").text
+    #         w.write(string + "\n")
+    #         print("Parent wrote: ", string)
+            
+    #         os.wait()
+    #         w.close()
+            
+
+    #     else:
+    #         # This is the child process
+    #         os.close(w)
+    #         r = os.fdopen(r)
+    #         old_stdin = sys.stdin
+    #         sys.stdin = r
+    #         print("Child reading")
+    #         # str = r.read()
+    #         self.sp = spotipy.Spotify(auth_manager=auth_manager)
+    #         print("WE ABOUT TO GET DOWN")
+    #         self.sp.current_user()
+    #         print( "Child read")
+    #         sys.stdin = old_stdin
             
           
 
@@ -107,7 +131,8 @@ class Spotify:
 
 if __name__=="__main__":
     s = Spotify()
-    s.initialize()
+    # s.initialize()
+    print(s.getAuthUrl())
     print(66, "here")
     print(s.sp.current_playback())
     s.printUser()

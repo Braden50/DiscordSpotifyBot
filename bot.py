@@ -11,13 +11,15 @@ import urllib.request
 import re
 import random
 import asyncio
+from spotify import Spotify
 
 import time
 
 #from spotify import Spotify
 
 
-# sp = Spotify()
+spotify_objects = {}   # one for each user {userid:spotify}
+
 # sp.initialize()
 # sp.printUser()
 DISCORD_TOKEN = discord_key
@@ -123,6 +125,34 @@ async def sucker(ctx):
     await greeting(ctx)
     guck_string = getGuck
     await ctx.send(getGuck())
+
+
+@bot.command(name='authSpotify', help='Connects to spotify')
+async def authSpotify(ctx):
+    s = Spotify()
+    user_id = ctx.message.author.id
+    spotify_objects[user_id] = s
+    await ctx.send(f'Authenticate Spotify here: {s.getAuthUrl()}. Follow sign-on instructions and once provided the key, execute: $$connectSpotify <key>')
+
+
+
+@bot.command(name='connectSpotify', help='Connects to spotify')
+async def connectSpotify(ctx, key):
+    if user_id not in spotify_objects:
+        await ctx.send('Error: First, you need to sign in and get an access key by using "authSpotify" command')
+        return
+    try:
+        url_with_token = requests.get(f"{website_url}token?key={key}").text
+    except:
+        print("connectSpotify: Key Error")
+    user_id = ctx.message.author.id
+    s = spotify_objects[user_id]   # not checking if token needs refresh
+
+    
+
+    # await ctx.send(f'')
+
+
 
 
 @bot.command(name='play', help='To play song')
