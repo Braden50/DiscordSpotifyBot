@@ -1,8 +1,8 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-_libgcc_mutex=0.1=main
-_openmp_mutex=4.5=1_gnu
+# _libgcc_mutex=0.1=main
+# _openmp_mutex=4.5=1_gnu
 ca-certificates=2021.10.26=h06a4308_2
 certifi=2021.10.8=py39h06a4308_0
 click=8.0.3=pyhd3eb1b0_0
