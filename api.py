@@ -26,7 +26,7 @@ def redirect(): # this method gets all users
         return f'<h1>POST:{code}</h1>'
 
 
-@app.route('/token', methods=['GET'])
+@app.route('/token/', methods=['GET'])
 async def get_token(): # this method gets all users
     if request.method == 'GET':
         print("GET")
