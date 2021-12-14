@@ -4,9 +4,10 @@ from spotipy.oauth2 import SpotifyOAuth
 import os
 from spotipy.oauth2 import SpotifyClientCredentials
 
-os.environ['SPOTIPY_CLIENT_ID'] = secrets.SPOTIFY_ID
-os.environ['SPOTIPY_CLIENT_SECRET'] = secrets.SPOTIFY_SECRET
-os.environ['SPOTIPY_REDIRECT_URI'] = 'https://braden-discord-bot.herokuapp.com/'
+website_url = 'https://braden-discord-bot.herokuapp.com/'
+os.environ['SPOTIPY_CLIENT_ID'] = appSecrets.SPOTIFY_ID
+os.environ['SPOTIPY_CLIENT_SECRET'] = appSecrets.SPOTIFY_SECRET
+os.environ['SPOTIPY_REDIRECT_URI'] = 'http://example.com/callback/'
 
 
 username = '3bgUrO2zRjKTSVQtuxAndA'
@@ -58,6 +59,10 @@ class Spotify:
         followers = user['followers']['total']
         print(displayName, followers)
 
+if __name__=="__main__":
+    sp = Spotify()
+    sp.initialize()
+    sp.printUser()
 
 
 

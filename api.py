@@ -13,9 +13,13 @@ CORS(app)
 @app.route('/', methods=['GET', 'POST'])
 def get_token(): # this method gets all users
     if request.method == 'GET':
-        return "<h1>Hi</h1>"
+        print("GET")
+        code = request.args.get('code')
+        return f'<h1>{code}</h1>'
     elif request.method == 'POST':
-        print("HEREI AM")
+        print("POST")
+        code = request.args.get('code')
+        return f'<h1>{code}</h1>'
 
 
 
