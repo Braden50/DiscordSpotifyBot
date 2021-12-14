@@ -37,6 +37,7 @@ def get_token(): # this method gets all users
         key = request.args.get('key')
         if key is None:
             return "<h1>Are you lost?</h1>"
+        k = int(key)
         if key not in codes:
             return f"<h1>{key}</h1>\n<h3>{codes}</h3>"
         url = codes[key]  
