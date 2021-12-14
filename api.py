@@ -37,4 +37,4 @@ def get_token(): # this method gets all users
 
 PORT = int(os.getenv("PORT", 8080))
 DEBUG_MODE = int(os.getenv("DEBUG_MODE", 1))
-app.run(host="0.0.0.0", debug=DEBUG_MODE, port=PORT)
+# app.run(host="0.0.0.0", debug=DEBUG_MODE, port=PORT)

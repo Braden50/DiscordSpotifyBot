@@ -1,1 +1,1 @@
-web: gunicorn appy:japi.py
+web: gunicorn api:app
