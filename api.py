@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 
@@ -13,25 +13,9 @@ CORS(app)
 @app.route('/', methods=['GET', 'POST'])
 def get_token(): # this method gets all users
     if request.method == 'GET':
-        search_username = request.args.get('name')
-        search_job = request.args.get('job')
-        users = {}
-        if search_username:
-            if search_job:
-                users['users_list'] = userModel.find_by_name_and_job(search_username, search_job)
-                return users
-            users['users_list'] = userModel.find_by_name(search_username)
-            return users
-        users['users_list'] = userModel.find_all()
-        return users
+        return "<h1>Hi</h1>"
     elif request.method == 'POST':
-        userToAdd = request.get_json()
-        newUser = User(userToAdd)
-        newUser.save()
-        resp = jsonify(newUser), 201
-        # resp.status_code = 200 #optionally, you can always set a response code.
-        # 200 is the default code for a normal response
-        return resp
+        print("HEREI AM")
 
 
 
