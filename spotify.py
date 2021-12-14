@@ -3,11 +3,15 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
 from spotipy.oauth2 import SpotifyClientCredentials
+from api import codes
+import requests
+
+import sys, time
 
 website_url = 'https://braden-discord-bot.herokuapp.com/'
 os.environ['SPOTIPY_CLIENT_ID'] = appSecrets.SPOTIFY_ID
 os.environ['SPOTIPY_CLIENT_SECRET'] = appSecrets.SPOTIFY_SECRET
-os.environ['SPOTIPY_REDIRECT_URI'] = 'http://example.com/callback/'
+os.environ['SPOTIPY_REDIRECT_URI'] = website_url #'http://example.com/callback/'
 
 
 username = '3bgUrO2zRjKTSVQtuxAndA'
@@ -44,25 +48,67 @@ class Spotify:
         self.sp = None
     
     def initialize(self):
-        auth_manager = SpotifyClientCredentials()
-        try:
-            self.token = spotipy.util.prompt_for_user_token(scope=scope_str, show_dialog=False)
-        except:
-            os.remove(f".cache-{username}")
-            self.token = spotipy.util.prompt_for_user_token(scope=scope_str, show_dialog=False)
-        self.sp = spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
+        # auth_manager = SpotifyClientCredentials()
+        # try:
+        auth_manager=SpotifyOAuth(scope=scope_str)
+        print("HEREHEHHEHRH")
+        #-----------------------------------------------------
+        r, w = os.pipe()
+      
+        #Creating child process using fork
+        processid = os.fork()
+        if processid:
+            # This is the parent process
+            # Closes file descriptor w
+            os.close(r)
+            w = os.fdopen(w, 'w')
+            print("Parent writing")
+
+            string = requests.get(f"{website_url}token").text
+            w.write(string)
+            print("Child wrote: ", string)
+            
+            
+            w.close()
+
+        else:
+            # This is the child process
+            os.close(w)
+            r = os.fdopen(r)
+            print ("Child reading")
+            # str = r.read()
+            self.sp = spotipy.Spotify(auth_manager=auth_manager)
+            print("WE ABOUT TO GET DOWN")
+            self.sp.current_user()
+            print( "Child read")
+            
+          
+
+        # "    spotipy.Spotify(auth_manager=auth_manager)
+        # self.token = spotipy.util.prompt_for_user_token(scope=scope_str, show_dialog=False)
+        # except:
+        #     os.remove(f".cache-{username}")
+        #     self.token = spotipy.util.prompt_for_user_token(scope=scope_str, show_dialog=False)
+        # self.sp = spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
+        #
+        # 
+        # 
+        #  self.sp = spotipy.Spotify(auth_manager=auth_manager)
     
     def printUser(self):
-        print("HERE")
+        print(1, "HERE")
         user = self.sp.current_user()
+        print(2, "HERE")
         displayName = user['display_name']
         followers = user['followers']['total']
         print(displayName, followers)
 
 if __name__=="__main__":
-    sp = Spotify()
-    sp.initialize()
-    sp.printUser()
+    s = Spotify()
+    s.initialize()
+    print(66, "here")
+    print(s.sp.current_playback())
+    s.printUser()
 
 
 
