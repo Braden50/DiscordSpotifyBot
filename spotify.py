@@ -70,12 +70,13 @@ class Spotify:
             
             
             w.close()
+            os.wait()
 
         else:
             # This is the child process
             os.close(w)
             r = os.fdopen(r)
-            print ("Child reading")
+            print("Child reading")
             # str = r.read()
             self.sp = spotipy.Spotify(auth_manager=auth_manager)
             print("WE ABOUT TO GET DOWN")
