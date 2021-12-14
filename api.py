@@ -13,7 +13,7 @@ CORS(app)
 
 
 @app.route('/', methods=['GET', 'POST'])
-def get_token(): # this method gets all users
+def redirect(): # this method gets all users
     if request.method == 'GET':
         print("GET")
         code = request.args.get('code')
