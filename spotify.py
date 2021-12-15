@@ -1,4 +1,4 @@
-import appSecrets
+# import appSecrets
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
