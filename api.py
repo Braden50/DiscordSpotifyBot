@@ -48,8 +48,8 @@ def get_token(): # this method gets all users
         return url
 
 
-bot.loop.create_task(audio_player_task())
-bot.run(DISCORD_TOKEN)
+# bot.loop.create_task(audio_player_task())
+# bot.run(DISCORD_TOKEN)
 
 # PORT = int(os.getenv("PORT", 8080))
 # DEBUG_MODE = int(os.getenv("DEBUG_MODE", 1))
