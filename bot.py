@@ -13,7 +13,7 @@ import random
 import asyncio
 import requests
 
-from appSecrets import website_url
+# from appSecrets import website_url
 from spotify import Spotify
 
 
