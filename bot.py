@@ -26,9 +26,9 @@ spotify_objects = {}   # one for each user {userid:spotify}
 
 # sp.initialize()
 # sp.printUser()
-DISCORD_TOKEN = os.environ['SPOTIPY_CLIENT_ID']
+DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 if DISCORD_TOKEN is None:
-    raise Exception("No spotify client id provided")
+    raise Exception("No discord token provided")
 
 players = {}  # TODO: carry different players per channel
 play_next_song = asyncio.Event()
@@ -171,7 +171,6 @@ async def spotifyCommands(ctx, command, **args):
         return
     s = spotify_objects[user_id]
     if command.lower() == "now":
-        print(22222222222222)
         await playNow(ctx, s)
     else:
         await ctx.send('Spotify command not implemented')

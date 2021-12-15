@@ -6,9 +6,12 @@ import random
 from bot import bot, audio_player_task
 
 codes = {}
-redirect_url = os.environ['SPOTIPY_REDIRECT_URI']
+redirect_url = os.environ['SPOTIFY_REDIRECT_URI']
+DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 if redirect_url is None:
     raise Exception("No spotify redirect uri provided")
+
+
 
 app = Flask(__name__)
 CORS(app)
