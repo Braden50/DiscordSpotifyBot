@@ -5,7 +5,7 @@ import os
 from spotipy.oauth2 import SpotifyClientCredentials
 from api import codes
 import requests
-from appSecrets import website_url
+# from appSecrets import website_url
 import sys, time
 
 

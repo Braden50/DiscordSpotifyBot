@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands,tasks
 import os
 import youtube_dl
-from appSecrets import discord_key
+# from appSecrets import discord_key
 import urllib.request
 import re
 import random
@@ -29,7 +29,7 @@ spotify_objects = {}   # one for each user {userid:spotify}
 DISCORD_TOKEN = os.environ['SPOTIPY_CLIENT_ID']
 if DISCORD_TOKEN is None:
     raise Exception("No spotify client id provided")
-    
+
 players = {}  # TODO: carry different players per channel
 play_next_song = asyncio.Event()
 songs = asyncio.Queue()
