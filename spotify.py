@@ -9,11 +9,6 @@ from appSecrets import website_url
 import sys, time
 
 
-os.environ['SPOTIPY_CLIENT_ID'] = appSecrets.SPOTIFY_ID
-os.environ['SPOTIPY_CLIENT_SECRET'] = appSecrets.SPOTIFY_SECRET
-os.environ['SPOTIPY_REDIRECT_URI'] = website_url #'http://example.com/callback/'
-
-
 scopes = [
     'ugc-image-upload',
     'user-read-playback-state',
@@ -50,66 +45,16 @@ class Spotify:
         return self.auth_manager.get_authorize_url()
     
     def authenticate(self, url):
-        print(url)
+        # print(url)
         code = self.auth_manager.parse_response_code(url)
-        print(code)
+        # print(code)
         token = self.auth_manager.get_access_token(code)
-        print(token)
-        token = sp_oauth.get_access_token(code, as_dict=False)
+        # print(token)
         self.sp.auth = token
         user = self.sp.current_user()
         displayName = user['display_name']
         return displayName
         # spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
-    
-
-    # def initialize(self):
-    #     self.auth_manager = SpotifyOAuth(scope=scope_str)
-    #     self.sp = spotipy.Spotify(auth_manager=self.auth_manager)
-
-
-    # def initialize(self):
-    #     # auth_manager = SpotifyClientCredentials()
-    #     # try:
-    #     auth_manager=SpotifyOAuth(scope=scope_str)
-    #     auth_url = auth_manager.get_authorize_url()
-    #     print(auth_url)
-    #     #-----------------------------------------------------
-    #     r, w = os.pipe()
-      
-    #     #Creating child process using fork
-    #     processid = os.fork()
-    #     if processid:
-    #         # This is the parent process
-    #         # Closes file descriptor w
-    #         os.close(r)
-    #         w = os.fdopen(w, 'w')
-            
-    #         print("Parent writing")
-    #         token_url = f"{website_url}token"
-    #         time.sleep(1)
-    #         print(1, token_url)
-    #         string = requests.get(f"{website_url}token").text
-    #         w.write(string + "\n")
-    #         print("Parent wrote: ", string)
-            
-    #         os.wait()
-    #         w.close()
-            
-
-    #     else:
-    #         # This is the child process
-    #         os.close(w)
-    #         r = os.fdopen(r)
-    #         old_stdin = sys.stdin
-    #         sys.stdin = r
-    #         print("Child reading")
-    #         # str = r.read()
-    #         self.sp = spotipy.Spotify(auth_manager=auth_manager)
-    #         print("WE ABOUT TO GET DOWN")
-    #         self.sp.current_user()
-    #         print( "Child read")
-    #         sys.stdin = old_stdin
             
           
 
@@ -134,11 +79,21 @@ class Spotify:
 
 if __name__=="__main__":
     s = Spotify()
-    # s.initialize()
-    print(s.getAuthUrl())
-    print(66, "here")
-    print(s.sp.current_playback())
-    s.printUser()
+    auth_url = s.getAuthUrl()
+    name = s.authenticate(auth_url)
+    cs = s.sp.currently_playing()
+    if cs is None:
+        exit() # nothing playing rn
+    print(s.sp.currently_playing())
+    
+    album = cs['item']['album']['name']
+    artist = cs['item']['artists'][0]['name']
+    song_name = cs['item']['name']
+    is_playing = cs['is_playing']
+    print(f"{song_name} by {artist} on {album}. Is playing? {is_playing}")
+
+    
+    # s.printUser()
 
 
 

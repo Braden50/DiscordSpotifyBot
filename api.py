@@ -3,11 +3,12 @@ from flask_cors import CORS
 import os
 from queue import Queue
 import random
-
+from bot import bot, audio_player_task
 
 codes = {}
-redirect_url = 'https://braden-discord-bot.herokuapp.com/'
-os.environ['FLASK_APP'] = 'api.py'
+redirect_url = os.environ['SPOTIPY_REDIRECT_URI']
+if redirect_url is None:
+    raise Exception("No spotify redirect uri provided")
 
 app = Flask(__name__)
 CORS(app)
@@ -25,9 +26,6 @@ def redirect(): # this method gets all users
         
     elif request.method == 'POST':
         print("POST")
-        # code = request.args.get('code')
-        # codes.put(f'{redirect_url}?code={code}')
-        # return f'<h1>POST:{code}</h1>'
 
 
 @app.route('/token/', methods=['GET'])
@@ -39,14 +37,17 @@ def get_token(): # this method gets all users
             return "<h1>Are you lost?</h1>"
         key = int(key)
         if key not in codes:
-            return f"<h1>{key}</h1>\n<h3>{codes}</h3>"
+            "<h2>Invalid Key Provided</h2>"
+            # return f"<h1>{key}</h1>\n<h3>{codes}</h3>"
         url = codes[key]  
         del codes[key]
         print(123, url)
         return url
 
 
+bot.loop.create_task(audio_player_task())
+bot.run(DISCORD_TOKEN)
 
-PORT = int(os.getenv("PORT", 8080))
-DEBUG_MODE = int(os.getenv("DEBUG_MODE", 1))
+# PORT = int(os.getenv("PORT", 8080))
+# DEBUG_MODE = int(os.getenv("DEBUG_MODE", 1))
 # app.run(host="0.0.0.0", debug=DEBUG_MODE, port=PORT)

@@ -26,7 +26,10 @@ spotify_objects = {}   # one for each user {userid:spotify}
 
 # sp.initialize()
 # sp.printUser()
-DISCORD_TOKEN = discord_key
+DISCORD_TOKEN = os.environ['SPOTIPY_CLIENT_ID']
+if DISCORD_TOKEN is None:
+    raise Exception("No spotify client id provided")
+    
 players = {}  # TODO: carry different players per channel
 play_next_song = asyncio.Event()
 songs = asyncio.Queue()
@@ -96,8 +99,12 @@ def toggle_next():
     client.loop.call_soon_threadsafe(play_next_song.set)
 
 
-def search(arg, YDL_OPTIONS):
-    html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + arg)
+def search(query):
+    '''
+    Returns a url to the first youtube video that comes up when searching with the query
+    '''
+    query = query.replace(" ", '+')
+    html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + query)
     video_ids = re.findall(r"watch\?v=(\S{11})", html.read().decode())
     url = "https://www.youtube.com/watch?v=" + video_ids[0]
     return url
@@ -154,17 +161,46 @@ async def connectSpotify(ctx, key):
     spotify_name = s.authenticate(url_with_token)
     await ctx.send(f"Welcome {spotify_name}! Your spotify has been connected!")
 
+
+
+@bot.command(name='spotify', help='Connects to spotify')
+async def spotifyCommands(ctx, command, **args):
+    user_id = ctx.message.author.id
+    if user_id not in spotify_objects:
+        await ctx.send('Error: You need to sign into your spotify first with "authSpotify" then "connectSpotify <key>"')
+        return
+    s = spotify_objects[user_id]
+    if command.lower() == "now":
+        print(22222222222222)
+        await playNow(ctx, s)
+    else:
+        await ctx.send('Spotify command not implemented')
+    # TODO: check if token is still good
     
 
-    # await ctx.send(f'')
-
+    
+# TODO
+@bot.command(help='"$$spotify now" - Plays the current spotify playing song on the discord')
+async def playNow(ctx, s):
+    auth_url = s.getAuthUrl()
+    name = s.authenticate(auth_url)
+    cs = s.sp.currently_playing()   # "current song"
+    if cs is None or cs['is_playing'] is False:
+        await ctx.send('Nothing is currently playing SILLY.')
+        return
+    
+    album = cs['item']['album']['name']
+    artist = cs['item']['artists'][0]['name']
+    song_name = cs['item']['name']
+    query = f"{song_name} by {artist} on {album}"
+    await play(ctx, single_query=query)
 
 
 
 @bot.command(name='play', help='To play song')
-async def play(ctx, *args):
+async def play(ctx, *args, single_query=None):
     await greeting(ctx)
-    if len(args) == 0:
+    if len(args) == 0 and single_query is None:
         voice_client = ctx.message.guild.voice_client
         if not voice_client:
             await ctx.send(f'Nothing is ready to play, give me something to search silly!')
@@ -175,7 +211,10 @@ async def play(ctx, *args):
                 await ctx.send(f"You didn't give me anything to search... did you mean \"resume\"?")
         return
 
-    query = " ".join(args)    
+    if single_query:
+        query = single_query
+    else:
+        query = " ".join(args)    
     channel = ctx.message.author.voice.channel
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if not voice is None:  # Voice client needs to be initialized and connected to play music
@@ -186,12 +225,15 @@ async def play(ctx, *args):
         await channel.connect()
         voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     
-    url = search(query.replace(" ", "+"), ytdl_format_options)   # replace spaces with + for url search query
+    url = search(query, ytdl_format_options)   # replace spaces with + for url search query
     channel = ctx.message.author.voice.channel
     
     info = ytdl.extract_info(url, download=False)
     extracted_url = info['formats'][0]['url']
-    player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)
+    try:
+        player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)
+    except Exception as e:
+        print(e, e.args)
     await songs.put({
         "voice": voice,
         "player": player})
