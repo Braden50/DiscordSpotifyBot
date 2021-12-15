@@ -13,13 +13,8 @@ import random
 import asyncio
 import requests
 
-# from appSecrets import website_url
 from spotify import Spotify
-
-
 import time
-
-#from spotify import Spotify
 
 
 spotify_objects = {}   # one for each user {userid:spotify}
@@ -353,6 +348,13 @@ async def on_message(message) :
         await message.channel.send('nice')
 
 
+def start():
+    bot.loop.create_task(audio_player_task())
+    bot.run(DISCORD_TOKEN)
+
+
+
 if __name__ == "__main__" :
+    # Assuming that if main is run it is local
     bot.loop.create_task(audio_player_task())
     bot.run(DISCORD_TOKEN)

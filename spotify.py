@@ -43,13 +43,14 @@ class Spotify:
     def getAuthUrl(self):
         return self.auth_manager.get_authorize_url()
     
-    def authenticate(self, url):
+    def authenticate(self, url, local=False):
         # print(url)
-        code = self.auth_manager.parse_response_code(url)
-        # print(code)
-        token = self.auth_manager.get_access_token(code)
-        # print(token)
-        self.sp.auth = token
+        if local:
+            pass # TODO
+        else:
+            code = self.auth_manager.parse_response_code(url)
+            token = self.auth_manager.get_access_token(code)
+            self.sp.auth = token
         user = self.sp.current_user()
         displayName = user['display_name']
         return displayName
