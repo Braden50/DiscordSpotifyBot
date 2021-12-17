@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands,tasks
 import os
 # import youtube_dl
-import yt-dlp as youtube_dl
+import yt_dlp as youtube_dl
 # from appSecrets import discord_key
 import urllib.request
 import re
