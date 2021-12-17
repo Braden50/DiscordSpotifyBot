@@ -224,22 +224,31 @@ async def play(ctx, *args, single_query=None):
     else:
         await channel.connect()
         voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    
-    url = search(query)   # replace spaces with + for url search query
-    channel = ctx.message.author.voice.channel
-    
-    print(url)
-    info = ytdl.extract_info(url, download=False)
-    print("EXTRACTED")
-    extracted_url = info['formats'][0]['url']
+    # NUM_ATTEMPTS = 5
+    # for attempt in range(NUM_ATTEMPTS):
     try:
-        player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)
+        url = search(query)   # replace spaces with + for url search query
+        channel = ctx.message.author.voice.channel
     except Exception as e:
-        print(e, e.args)
-    await songs.put({
-        "voice": voice,
-        "player": player})
-    await ctx.send(f'Playing... eventually: {url}')
+        print(1, e)
+    try:
+        print(url)
+        info = ytdl.extract_info(url, download=False)
+        print("EXTRACTED")
+        extracted_url = info['formats'][0]['url']
+        try:
+            player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)
+        except Exception as e:
+            print(e, e.args)
+    except Exception as e:
+        print(2, e)
+    try:
+        await songs.put({
+            "voice": voice,
+            "player": player})
+        await ctx.send(f'Playing... eventually: {url}')
+    except Exception as e:
+        print(3, e)
 
 
 @bot.command(name='skip', help='skip')
