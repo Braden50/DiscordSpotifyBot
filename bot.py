@@ -16,14 +16,19 @@ import requests
 from spotify import Spotify
 import time
 
+    
+import secrets
 
 spotify_objects = {}   # one for each user {userid:spotify}
 
 # sp.initialize()
-# sp.printUser()
-DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
+# # sp.printUser()
+# os.environ['DISCORD_TOKEN'] = 'token'
+DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
 if DISCORD_TOKEN is None:
     raise Exception("No discord token provided")
+elif DISCORD_TOKEN == 'token':
+    raise Exception("token is tokeN")
 
 players = {}  # TODO: carry different players per channel
 play_next_song = asyncio.Event()
@@ -219,10 +224,12 @@ async def play(ctx, *args, single_query=None):
         await channel.connect()
         voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     
-    url = search(query, ytdl_format_options)   # replace spaces with + for url search query
+    url = search(query)   # replace spaces with + for url search query
     channel = ctx.message.author.voice.channel
     
+    print(url)
     info = ytdl.extract_info(url, download=False)
+    print("EXTRACTED")
     extracted_url = info['formats'][0]['url']
     try:
         player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)

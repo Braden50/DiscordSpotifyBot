@@ -6,8 +6,8 @@ import random
 from bot import bot, audio_player_task
 
 codes = {}
-redirect_url = os.environ['SPOTIFY_REDIRECT_URI']
-DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
+redirect_url = os.environ.get('SPOTIFY_REDIRECT_URI')
+DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
 if redirect_url is None:
     raise Exception("No spotify redirect uri provided")
 
