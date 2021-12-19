@@ -89,6 +89,7 @@ ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 async def audio_player_task():
     while True:
+        print("A" * 20)
         play_next_song.clear()
         current = await songs.get()
         if current['voice'].is_playing():
@@ -97,6 +98,7 @@ async def audio_player_task():
         await play_next_song.wait()
 
 def toggle_next():
+    print("B" * 20)
     client.loop.call_soon_threadsafe(play_next_song.set)
 
 
@@ -239,7 +241,7 @@ async def play(ctx, *args, single_query=None):
         try:
             player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)
         except Exception as e:
-            print(e, e.args)
+            print(69, e, e.args)
     except Exception as e:
         print(2, e)
     try:
@@ -249,6 +251,7 @@ async def play(ctx, *args, single_query=None):
         await ctx.send(f'Playing... eventually: {url}')
     except Exception as e:
         print(3, e)
+    print("D" * 20)
 
 
 @bot.command(name='skip', help='skip')
@@ -327,31 +330,31 @@ async def on_ready():
 async def whats_my_name(ctx) :
     await ctx.send('Hello {}'.format(ctx.author.name))
 
-@bot.command(help = "Prints details of Server")
-async def where_am_i(ctx):
-    owner=str(ctx.guild.owner)
-    region = str(ctx.guild.region)
-    guild_id = str(ctx.guild.id)
-    memberCount = str(ctx.guild.member_count)
-    icon = str(ctx.guild.icon_url)
-    desc=ctx.guild.description
+# @bot.command(help = "Prints details of Server")
+# async def where_am_i(ctx):
+#     owner=str(ctx.guild.owner)
+#     region = str(ctx.guild.region)
+#     guild_id = str(ctx.guild.id)
+#     memberCount = str(ctx.guild.member_count)
+#     icon = str(ctx.guild.icon_url)
+#     desc=ctx.guild.description
     
-    embed = discord.Embed(
-        title=ctx.guild.name + " Server Information",
-        description=desc,
-        color=discord.Color.blue()
-    )
-    embed.set_thumbnail(url=icon)
-    embed.add_field(name="Owner", value=owner, inline=True)
-    embed.add_field(name="Server ID", value=guild_id, inline=True)
-    embed.add_field(name="Region", value=region, inline=True)
-    embed.add_field(name="Member Count", value=memberCount, inline=True)
+#     embed = discord.Embed(
+#         title=ctx.guild.name + " Server Information",
+#         description=desc,
+#         color=discord.Color.blue()
+#     )
+#     embed.set_thumbnail(url=icon)
+#     embed.add_field(name="Owner", value=owner, inline=True)
+#     embed.add_field(name="Server ID", value=guild_id, inline=True)
+#     embed.add_field(name="Region", value=region, inline=True)
+#     embed.add_field(name="Member Count", value=memberCount, inline=True)
 
-    await ctx.send(embed=embed)
+#     await ctx.send(embed=embed)
 
-    members=[]
-    async for member in ctx.guild.fetch_members(limit=150) :
-        await ctx.send('Name : {}\t Status : {}\n Joined at {}'.format(member.display_name,str(member.status),str(member.joined_at)))
+#     members=[]
+#     async for member in ctx.guild.fetch_members(limit=150) :
+#         await ctx.send('Name : {}\t Status : {}\n Joined at {}'.format(member.display_name,str(member.status),str(member.joined_at)))
 
 
 @bot.event
