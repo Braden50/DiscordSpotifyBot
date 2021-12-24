@@ -51,7 +51,7 @@ def get_token(): # this method gets all users
 
 
 print('Starting bot')
-client.run(os.environ.get(DISCORD_TOKEN))
+client.run(DISCORD_TOKEN)
 print('Quit')
 
 # bot.loop.create_task(audio_player_task())
