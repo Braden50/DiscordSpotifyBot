@@ -438,5 +438,5 @@ async def spotifyNow(ctx: SlashContext):
 
 
 
-if __name__=="__main__":
-    client.run(os.environ.get("DISCORD_TOKEN"))
+# if __name__=="__main__":
+#     client.run(os.environ.get("DISCORD_TOKEN"))
