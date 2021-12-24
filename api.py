@@ -3,12 +3,14 @@ from flask_cors import CORS
 import os
 from queue import Queue
 import random
-from bot import bot, audio_player_task
+from bot import client,  bot, audio_player_task
 
 codes = {}
-redirect_url = os.environ.get('SPOTIFY_REDIRECT_URI')
+REDIRECT_URL = os.environ.get('SPOTIFY_REDIRECT_URI')
 DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
-if redirect_url is None:
+if REDIRECT_URL is None:
+    raise Exception("No spotify redirect uri provided")
+if DISCORD_TOKEN is None:
     raise Exception("No spotify redirect uri provided")
 
 
@@ -23,7 +25,7 @@ def redirect(): # this method gets all users
         print("GET")
         code = request.args.get('code')
         key = random.getrandbits(128)
-        final_url = f'{redirect_url}?code={code}'
+        final_url = f'{REDIRECT_URL}?code={code}'
         codes[key] = final_url
         return f"Key: {str(key)}"
         
@@ -47,6 +49,10 @@ def get_token(): # this method gets all users
         print(123, url)
         return url
 
+
+print('Starting bot')
+client.run(os.environ.get(DISCORD_TOKEN))
+print('Quit')
 
 # bot.loop.create_task(audio_player_task())
 # bot.run(DISCORD_TOKEN)

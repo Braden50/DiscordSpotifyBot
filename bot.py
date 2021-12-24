@@ -1,123 +1,64 @@
-from __future__ import unicode_literals
-
-from discord.utils import get
-from discord import FFmpegPCMAudio
-import discord
-from discord.ext import commands,tasks
 import os
-# import youtube_dl
-import yt_dlp as youtube_dl
-# from appSecrets import discord_key
-import urllib.request
-import re
-import random
-import asyncio
-import requests
+import discord
+import datetime
+import json
+import util
+import ui
+from music import Song, Playlist, PlayerInstance
+from discord_slash import SlashCommand, SlashContext, ComponentContext
+from discord_slash.model import SlashCommandOptionType
 
 from spotify import Spotify
-import time
 
-    
-import secrets
-
+client = discord.Client(intents=discord.Intents.default())
+slash = SlashCommand(client, sync_commands=True)
+guild_ids = {} #json.loads(os.environ.get('GUILD_IDS'))
+players = {} # players: dict[int, PlayerInstance] = {}
 spotify_objects = {}   # one for each user {userid:spotify}
 
-# sp.initialize()
-# # sp.printUser()
-# os.environ['DISCORD_TOKEN'] = 'token'
-DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
-if DISCORD_TOKEN is None:
-    raise Exception("No discord token provided")
-elif DISCORD_TOKEN == 'token':
-    raise Exception("token is tokeN")
+@client.event
+async def on_ready():
+    print(f'Logged in as {client.user.name}#{client.user.discriminator}')
+    print('Ready!')
 
-players = {}  # TODO: carry different players per channel
-play_next_song = asyncio.Event()
-songs = asyncio.Queue()
+async def connect_vc(ctx: SlashContext):
+    voice_channel = ctx.author.voice.channel if ctx.author.voice is not None else None
+    if voice_channel is None:
+        return False
 
-intents = discord.Intents().all()
-client = discord.Client(intents=intents)
-bot = commands.Bot(command_prefix='$$',intents=intents)
+    if ctx.voice_client is not None and ctx.voice_client.is_connected():
+        await ctx.voice_client.move_to(voice_channel)
+    else:
+        voice_client = await voice_channel.connect()
+        players[voice_channel.id] = PlayerInstance(voice_client)
+    return True
 
-youtube_dl.utils.bug_reports_message = lambda: ''
+def get_player(ctx: SlashContext):
+    if ctx.voice_client is None:
+        return None
 
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0', # bind to ipv4 since ipv6 addresses cause issues sometimes
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192',
-    }],
-    'outtmpl': '/tmp/%(title)s.mp3'
-}
+    vc_id = ctx.voice_client.channel.id
+    if vc_id in players:
+        return players[vc_id]
+    return None
 
+async def get_player_or_connect(ctx: SlashContext, *, reply=False):
+    player = get_player(ctx)
+    if player is None:
+        if not await connect_vc(ctx):
+            if reply:
+                await ctx.send(content=ui.ERR_NOT_IN_VC)
+            return None
+        player = get_player(ctx)
 
-ffmpeg_options = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 
-    'options': '-vn'
-}
+    if player is None and reply:
+        await ctx.send(content=ui.ERR_UNKNOWN)
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+    return player
 
-
-# class YTDLSource(discord.PCMVolumeTransformer):
-#     def __init__(self, source, *, data, volume=0.5):
-#         super().__init__(source, volume)
-#         self.data = data
-#         self.title = data.get('title')
-#         self.url = ""
-
-#     @classmethod
-#     async def from_url(cls, url, *, loop=None, stream=False):
-#         loop = loop or asyncio.get_event_loop()
-#         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-#         if 'entries' in data:
-#             # take first item from a playlist
-#             data = data['entries'][0]
-#         filename = data['title'] if stream else ytdl.prepare_filename(data)
-#         return filename
-
-
-async def audio_player_task():
-    while True:
-        play_next_song.clear()
-        current = await songs.get()
-        if current['voice'].is_playing():
-            current['voice'].stop()
-        current['voice'].play(current['player'])
-        await play_next_song.wait()
-
-def toggle_next():
-    client.loop.call_soon_threadsafe(play_next_song.set)
-
-
-def search(query):
-    '''
-    Returns a url to the first youtube video that comes up when searching with the query
-    '''
-    query = query.replace(" ", '+')
-    html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + query)
-    video_ids = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-    url = "https://www.youtube.com/watch?v=" + video_ids[0]
-    return url
-    
-
-def getGuck():
-    case = [str.upper, str.lower]
-    guck_string = ""
-    for i in range(random.randint(20, 100)):
-        guck = "".join(random.choice(case)(c) for c in "guck")
-        guck_string += (guck)
-    return guck_string
+@slash.component_callback()
+async def handle_component(ctx: ComponentContext):
+    pass
 
 
 def getName(ctx):
@@ -128,19 +69,283 @@ def getName(ctx):
     return username
 
 
-async def greeting(ctx):
+async def kindResponse(ctx):
     await ctx.send(f'Anything for you {getName(ctx)} uWu')
 
 
-@bot.command(name='guck', help='Guck command for fun')
-async def sucker(ctx):
-    await greeting(ctx)
-    guck_string = getGuck
-    await ctx.send(getGuck())
+@slash.slash(
+    name='join',
+    description='Join the VC',
+    guild_ids=guild_ids
+)
+async def join(ctx: SlashContext):
+    if not await connect_vc(ctx):
+        return await ctx.send(content=ui.ERR_NOT_IN_VC)
+
+    await ctx.send(content=f'Hey {getName(ctx)}')
+
+@slash.slash(
+    name='leave',
+    description='Leave the VC',
+    guild_ids=guild_ids
+)
+async def leave(ctx: SlashContext):
+    voice_channel = ctx.author.voice.channel if ctx.author.voice is not None else None
+    if voice_channel is None:
+        await ctx.send(content=ui.ERR_NOT_IN_VC)
+        return
+
+    await ctx.voice_client.disconnect(force=True)
+    players[voice_channel.id] = None
+
+    await ctx.send(content='Bye!')
+
+@slash.slash(
+    name='play',
+    description='Add a song to the queue',
+    options=[
+        {
+            'name': 'query',
+            'description': 'YouTube video or playlist URL, search query, or queue number',
+            'type': SlashCommandOptionType.STRING,
+            'required': True
+        }
+    ],
+    guild_ids=guild_ids
+)
+async def play(ctx: SlashContext, etc=None, *, query):
+    await ctx.defer()
+    player = await get_player_or_connect(ctx, reply=True)
+    if player is None:
+        return
+
+    requester_id = ctx.author_id
+    queue_empty = len(player.playlist) == 0
+    queue_ended = not player.playlist.has_next()
+
+    # If query is a number, jump to that playlist index
+    if query.isnumeric():
+        player.playlist.jump(int(query) - 1, relative=False)
+
+        if await player.play():
+            await ctx.send(embed=await ui.now_playing(player))
+        else:
+            await ctx.send(content='End of queue')
+        return
+
+    songs = []
+    if util.is_url(query):
+        # Query is a URL, queue it
+        songs = await player.queue_url(query, requester_id)
+    else:
+        # Search YouTube and get first result
+        search = await util.youtube_extract_info(f'ytsearch1:{query}')
+        results = list(search['entries'])
+        url = 'https://youtu.be/' + results[0]['id']
+        songs = await player.queue_url(url, requester_id)
+
+    if len(songs) > 1:
+        await ctx.send(
+            content='{} songs queued'.format(len(songs))
+        )
+    elif len(songs) == 1:
+        song = await ui.format_song(songs[0])
+        await ctx.send(content=f'Queued: {song}')
+    else:
+        await ctx.send(content='No songs queued')
 
 
-@bot.command(name='authSpotify', help='Connects to spotify')
-async def authSpotify(ctx):
+    # Don't disturb the player if it's already playing
+    if player.is_playing():
+        return
+
+    # If the player is fresh, play
+    if queue_empty:
+        return await player.play()
+
+    # If it isn't playing because it reached the end of the queue,
+    # play the song that was just added to the queue
+    if queue_ended:
+        return await player.play_next()
+
+    # Otherwise resume playback
+    await player.resume()
+
+@slash.slash(
+    name='queue',
+    description='Show the current queue',
+    guild_ids=guild_ids
+)
+async def queue_list(ctx: SlashContext):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    await ctx.defer()
+
+    embed = await ui.queue(player)
+    await ctx.send(embed=embed)
+
+@slash.slash(
+    name='clear',
+    description='Remove all songs from the current queue',
+    guild_ids=guild_ids
+)
+async def queue_clear(ctx: SlashContext):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    await player.stop()
+    player.playlist.clear()
+
+    await ctx.send(content='Queue cleared!')
+
+@slash.slash(
+    name='shuffle',
+    description='Shuffle the order of songs in the queue',
+    guild_ids=guild_ids
+)
+async def queue_shuffle(ctx: SlashContext):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    player.playlist.shuffle()
+    await ctx.send(content='Queue shuffled!')
+
+@slash.slash(
+    name='skip',
+    description='Skip current song',
+    options=[
+        {
+            'name': 'number',
+            'description': 'How many songs to skip',
+            'type': SlashCommandOptionType.INTEGER,
+            'required': False
+        }
+    ],
+    guild_ids=guild_ids
+)
+async def skip(ctx: SlashContext, *, number=1):
+    await ctx.defer()
+    player = await get_player_or_connect(ctx, reply=True)
+    if player is None:
+        return
+
+    player.playlist.jump(number)
+
+    if await player.play():
+        await ctx.send(embed=await ui.now_playing(player))
+    else:
+        await ctx.send(content='End of queue')
+
+@slash.slash(
+    name='np',
+    description='Show the currently playing song',
+    guild_ids=guild_ids
+)
+async def now_playing(ctx: SlashContext):
+    player = await get_player_or_connect(ctx, reply=True)
+    if player is None:
+        return
+
+    await ctx.send(embed=await ui.now_playing(player))
+
+@slash.slash(
+    name='pause',
+    description='Pause the current song',
+    guild_ids=guild_ids
+)
+async def pause(ctx: SlashContext):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    if player.is_playing():
+        await player.pause()
+
+    await ctx.send(content='Paused')
+
+@slash.slash(
+    name='resume',
+    description='Resume playback',
+    guild_ids=guild_ids
+)
+async def resume(ctx: SlashContext):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    if not player.is_playing():
+        await player.resume()
+
+    await ctx.send(embed=await ui.now_playing(player))
+
+@slash.slash(
+    name='loop',
+    description='Enable/disable looping',
+    options=[
+        {
+            'name': 'mode',
+            'description': 'Loop this song or the whole queue?',
+            'type': SlashCommandOptionType.STRING,
+            'required': True,
+            'choices': [
+                { 'name': 'disable', 'value': PlayerInstance.LOOP_NONE },
+                { 'name': 'song', 'value': PlayerInstance.LOOP_SONG },
+                { 'name': 'queue', 'value': PlayerInstance.LOOP_QUEUE }
+            ]
+        }
+    ],
+    guild_ids=guild_ids
+)
+async def loop(ctx: SlashContext, mode=PlayerInstance.LOOP_NONE):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    player.loop_mode = mode
+    await ctx.send(content=f'Loop mode set to **{mode}**')
+
+@slash.slash(
+    name='remove',
+    description='Remove a song from the queue',
+    options=[
+        {
+            'name': 'number',
+            'description': 'The queue number of the song to remove',
+            'type': SlashCommandOptionType.INTEGER,
+            'required': True
+        }
+    ],
+    guild_ids=guild_ids
+)
+async def remove_song(ctx: SlashContext, number: int):
+    player = get_player(ctx)
+    if player is None:
+        return await ctx.send(content=ui.ERR_NO_PLAYER)
+
+    song = player.playlist.remove(number - 1)
+    title = await song.get_title()
+    url = song.url
+    await ctx.send(content=f'Removed #{number} [{title}]({url})')
+
+    if len(player.playlist) == 0:
+        return await player.stop()
+
+    if number - 1 == player.playlist.get_index():
+        await player.play()
+
+
+''' Spotify commmands '''
+
+@slash.slash(
+    name='authSpotify',
+    description='Connects to spotify',
+    guild_ids=guild_ids
+)
+async def authSpotify(ctx: SlashContext):
     s = Spotify()
     user_id = ctx.message.author.id
     spotify_objects[user_id] = s
@@ -148,7 +353,20 @@ async def authSpotify(ctx):
 
 
 
-@bot.command(name='connectSpotify', help='Connects to spotify')
+# @bot.command(name='connectSpotify', help='Connects to spotify')
+@slash.slash(
+    name='connectSpotify',
+    description='Connects to spotify with key from authSpotify link',
+    options=[
+        {
+            'name': 'key',
+            'description': 'Given user key for authentication',
+            'type': SlashCommandOptionType.STRING,
+            'required': True
+        }
+    ],
+    guild_ids=guild_ids
+)
 async def connectSpotify(ctx, key):
     user_id = ctx.message.author.id
     if user_id not in spotify_objects:
@@ -164,24 +382,39 @@ async def connectSpotify(ctx, key):
 
 
 
-@bot.command(name='spotify', help='Connects to spotify')
-async def spotifyCommands(ctx, command, **args):
+async def getSpotifyObj(ctx: SlashContext):
     user_id = ctx.message.author.id
     if user_id not in spotify_objects:
         await ctx.send('Error: You need to sign into your spotify first with "authSpotify" then "connectSpotify <key>"')
-        return
-    s = spotify_objects[user_id]
-    if command.lower() == "now":
-        await playNow(ctx, s)
+        return None
     else:
-        await ctx.send('Spotify command not implemented')
-    # TODO: check if token is still good
+        return spotify_objects[user_id]
+
+
+
+# @bot.command(name='spotify', help='Connects to spotify')
+# async def spotifyCommands(ctx, command, **args):
+#     user_id = ctx.message.author.id
+#     if user_id not in spotify_objects:
+#         await ctx.send('Error: You need to sign into your spotify first with "authSpotify" then "connectSpotify <key>"')
+#         return
+#     s = spotify_objects[user_id]
+#     if command.lower() == "now":
+#         await playNow(ctx, s)
+#     else:
+#         await ctx.send('Spotify command not implemented')
+#     # TODO: check if token is still good
     
 
-    
-# TODO
-@bot.command(help='"$$spotify now" - Plays the current spotify playing song on the discord')
-async def playNow(ctx, s):
+@slash.slash(
+    name='spotify now',
+    description='Adds the current song playing in spotify to queue',
+    guild_ids=guild_ids
+)
+async def spotifyNow(ctx: SlashContext):
+    s = getSpotifyObj(ctx)
+    if s in None:  # spotify not authenticated yet
+        return
     auth_url = s.getAuthUrl()
     name = s.authenticate(auth_url)
     cs = s.sp.currently_playing()   # "current song"
@@ -193,185 +426,8 @@ async def playNow(ctx, s):
     artist = cs['item']['artists'][0]['name']
     song_name = cs['item']['name']
     query = f"{song_name} by {artist} on {album}"
-    await play(ctx, single_query=query)
+    await play(ctx, query=query)
 
 
 
-@bot.command(name='play', help='To play song')
-async def play(ctx, *args, single_query=None):
-    await greeting(ctx)
-    if len(args) == 0 and single_query is None:
-        voice_client = ctx.message.guild.voice_client
-        if not voice_client:
-            await ctx.send(f'Nothing is ready to play, give me something to search silly!')
-        else:
-            if voice_client.is_playing():
-                await ctx.send(f'Something is already playing {getName(ctx)}, give me something to search.')
-            else:
-                await ctx.send(f"You didn't give me anything to search... did you mean \"resume\"?")
-        return
 
-    if single_query:
-        query = single_query
-    else:
-        query = " ".join(args)    
-    channel = ctx.message.author.voice.channel
-    voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if not voice is None:  # Voice client needs to be initialized and connected to play music
-        if not voice.is_connected():
-            await channel.connect()
-            voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    else:
-        await channel.connect()
-        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    # NUM_ATTEMPTS = 5
-    # for attempt in range(NUM_ATTEMPTS):
-    try:
-        url = search(query)   # replace spaces with + for url search query
-        channel = ctx.message.author.voice.channel
-    except Exception as e:
-        print(1, e)
-    try:
-        print(url)
-        info = ytdl.extract_info(url, download=False)
-        print("EXTRACTED")
-        extracted_url = info['formats'][0]['url']
-        try:
-            player = FFmpegPCMAudio(extracted_url, **ffmpeg_options)
-        except Exception as e:
-            print(e, e.args)
-    except Exception as e:
-        print(2, e)
-    try:
-        await songs.put({
-            "voice": voice,
-            "player": player})
-        await ctx.send(f'Playing... eventually: {url}')
-    except Exception as e:
-        print(3, e)
-
-
-@bot.command(name='skip', help='skip')
-async def skip(ctx):
-    if songs.qsize() == 0:
-        await ctx.send("No more songs in the queue")
-        return        
-    toggle_next()
-
-
-@bot.command(name='join', help='Tells the bot to join the voice channel')
-async def join(ctx):
-    if not ctx.message.author.voice:
-        await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
-        return
-    else:
-        channel = ctx.message.author.voice.channel
-    await channel.connect()
-
-
-@bot.command(name='pause', help='This command pauses the song')
-async def pause(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_playing():
-        voice_client.pause()
-    else:
-        await ctx.send("I am not playing anything at the moment.")
-    
-
-@bot.command(name='resume', help='Resumes the song')
-async def resume(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_paused():
-        voice_client.resume()
-    else:
-        await ctx.send("I am not playing anything before this.")
-    
-
-
-@bot.command(name='leave', help='To make the bot leave the voice channel')
-async def leave(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_connected():
-        await voice_client.disconnect()
-    else:
-        await ctx.send("The bot is not connected to a voice channel.")
-
-@bot.command(name='stop', help='Stops the song')
-async def stop(ctx):
-    voice_client = ctx.message.guild.voice_client
-    if voice_client.is_playing():
-        # await voice_client.stop()
-        voice_client.stop()
-    else:
-        await ctx.send("The bot is not playing anything at the moment.")
-
-
-# @bot.command(name='stop', help='Stops the song')
-# async def stop(ctx):
-#     voice_client = ctx.message.guild.voice_client
-#     if voice_client.is_playing():
-#         # await voice_client.stop()
-#         voice_client.stop()
-#     else:
-#         await ctx.send("The bot is not playing anything at the moment.")
-
-
-@bot.event
-async def on_ready():
-    print('Running!')
-    for guild in bot.guilds:
-        print('Active in {}\n Member Count : {}'.format(guild.name,guild.member_count))
-
-
-@bot.command(help = "Prints details of Author")
-async def whats_my_name(ctx) :
-    await ctx.send('Hello {}'.format(ctx.author.name))
-
-@bot.command(help = "Prints details of Server")
-async def where_am_i(ctx):
-    owner=str(ctx.guild.owner)
-    region = str(ctx.guild.region)
-    guild_id = str(ctx.guild.id)
-    memberCount = str(ctx.guild.member_count)
-    icon = str(ctx.guild.icon_url)
-    desc=ctx.guild.description
-    
-    embed = discord.Embed(
-        title=ctx.guild.name + " Server Information",
-        description=desc,
-        color=discord.Color.blue()
-    )
-    embed.set_thumbnail(url=icon)
-    embed.add_field(name="Owner", value=owner, inline=True)
-    embed.add_field(name="Server ID", value=guild_id, inline=True)
-    embed.add_field(name="Region", value=region, inline=True)
-    embed.add_field(name="Member Count", value=memberCount, inline=True)
-
-    await ctx.send(embed=embed)
-
-    members=[]
-    async for member in ctx.guild.fetch_members(limit=150) :
-        await ctx.send('Name : {}\t Status : {}\n Joined at {}'.format(member.display_name,str(member.status),str(member.joined_at)))
-
-
-@bot.event
-async def on_message(message) :
-    '''
-    Executes even if prefix isn't included in message
-    '''
-    # bot.process_commands(msg) is a couroutine that must be called here since we are overriding the on_message event
-    await bot.process_commands(message) 
-    if "tits" in message.content:
-        await message.channel.send('nice')
-
-
-def start():
-    bot.loop.create_task(audio_player_task())
-    bot.run(DISCORD_TOKEN)
-
-
-
-if __name__ == "__main__" :
-    # Assuming that if main is run it is local
-    bot.loop.create_task(audio_player_task())
-    bot.run(DISCORD_TOKEN)
