@@ -5,13 +5,9 @@ import random
 
 codes = {}
 REDIRECT_URL = os.environ.get('SPOTIPY_REDIRECT_URI')
-DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
+
 if REDIRECT_URL is None:
     raise Exception("No spotify redirect uri provided")
-if DISCORD_TOKEN is None:
-    raise Exception("No spotify redirect uri provided")
-
-
 
 app = Flask(__name__)
 CORS(app)
@@ -50,7 +46,8 @@ def get_token(): # this method gets all users
 
 # print('Starting bot')
 # try:
-#     
+#     x = threading.Thread(target=client.run, args=(DISCORD_TOKEN,))
+#     x.start()
 # except:
 #     print("Bot failed")
 # print('Quit')

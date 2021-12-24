@@ -3,11 +3,12 @@ from bot import client
 
 
 if __name__ == "__main__":
+    app.run()
     # x = threading.Thread(target=app.run)
     # x.start()
     # y = threading.Thread(target=client.run, args=(DISCORD_TOKEN,))
     # y.start()
-    client.run(DISCORD_TOKEN)
+    # client.run(DISCORD_TOKEN)
     # app.run()
 
 

@@ -1,14 +1,17 @@
 from api import app, DISCORD_TOKEN
 from bot import client
-import threading
-import asyncio
+# import threading
+# import asyncio
 
-loop = asyncio.get_event_loop()
+# loop = asyncio.get_event_loop()
 
-async def bootup_bot():
-    client.run(DISCORD_TOKEN)
+# async def bootup_bot():
+#     client.run(DISCORD_TOKEN)
+
+
 
 if __name__=="__main__":
-    loop.run_until_complete(bootup_bot())
-    app.run(debug=False, use_reloader=False)
-    
+    DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
+    if DISCORD_TOKEN is None:
+        raise Exception("No discord token provided")
+    client.run(DISCORD_TOKEN)
