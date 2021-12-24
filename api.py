@@ -50,8 +50,7 @@ def get_token(): # this method gets all users
 
 # print('Starting bot')
 # try:
-#     x = threading.Thread(target=client.run, args=(DISCORD_TOKEN,))
-#     x.start()
+#     
 # except:
 #     print("Bot failed")
 # print('Quit')
