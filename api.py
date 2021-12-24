@@ -3,7 +3,7 @@ from flask_cors import CORS
 import os
 from queue import Queue
 import random
-from bot import client,  bot, audio_player_task
+from bot import client
 
 codes = {}
 REDIRECT_URL = os.environ.get('SPOTIFY_REDIRECT_URI')
