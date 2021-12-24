@@ -1,4 +1,4 @@
-from api import app, DISCORD_TOKEN
+from api import app
 from bot import client
 
 
