@@ -1,10 +1,7 @@
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 import os
-from queue import Queue
 import random
-from bot import client
-import threading
 
 codes = {}
 REDIRECT_URL = os.environ.get('SPOTIPY_REDIRECT_URI')
@@ -51,13 +48,13 @@ def get_token(): # this method gets all users
         return url
 
 
-print('Starting bot')
-try:
-    x = threading.Thread(target=client.run, args=(DISCORD_TOKEN,))
-    x.start()
-except:
-    print("Bot failed")
-print('Quit')
+# print('Starting bot')
+# try:
+#     x = threading.Thread(target=client.run, args=(DISCORD_TOKEN,))
+#     x.start()
+# except:
+#     print("Bot failed")
+# print('Quit')
 
 # bot.loop.create_task(audio_player_task())
 # bot.run(DISCORD_TOKEN)
