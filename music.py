@@ -181,7 +181,8 @@ class PlayerInstance():
 
         source = await discord.FFmpegOpusAudio.from_probe(
             url,
-            before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
+            before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            options='-vn'
         )
 
         self.skip_next_callback = True

@@ -357,7 +357,7 @@ async def authSpotify(ctx: SlashContext):
     s = Spotify()
     user_id = str(ctx.author)
     spotify_objects[user_id] = s
-    await ctx.send(f'Authenticate Spotify here: {s.getAuthUrl()}. Follow sign-on instructions and once provided the key, execute: $$connectSpotify <key>')
+    await ctx.author.send(f'Authenticate Spotify here: {s.getAuthUrl()}. Follow sign-on instructions and once provided the key, execute: $$connectSpotify <key>')
 
 
 
