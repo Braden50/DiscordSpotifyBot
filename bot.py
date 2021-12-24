@@ -9,8 +9,8 @@ from discord_slash import SlashCommand, SlashContext, ComponentContext
 from discord_slash.model import SlashCommandOptionType
 
 from spotify import Spotify
-
-client = discord.Client(intents=discord.Intents.default())
+# print(discord.Intents().all())
+client = discord.Client(intents=discord.Intents().all())
 slash = SlashCommand(client, sync_commands=True)
 guild_ids = {} #json.loads(os.environ.get('GUILD_IDS'))
 players = {} # players: dict[int, PlayerInstance] = {}
@@ -61,16 +61,22 @@ async def handle_component(ctx: ComponentContext):
     pass
 
 
-def getName(ctx):
-    username = ctx.message.author.name
-    if username =="Braden50":
+def getName(ctx: SlashContext):
+    username = str(ctx.author)
+    if username =="Braden50#7614":
         return random.choice(["Sensei", "Daddy", "Senpai", "Big Daddy B", "Ass Clapper",
                               "xXo Silly oXx", "Everlasting Light"])
-    return username
+    return username.split("#")[0]
 
 
-async def kindResponse(ctx):
+async def kindResponse(ctx: SlashContext):
     await ctx.send(f'Anything for you {getName(ctx)} uWu')
+
+
+@slash.slash(name="test",
+             description="This is just a test command, nothing more.")
+async def test(ctx):
+  await ctx.send(content="Hello World!")
 
 
 @slash.slash(
@@ -340,14 +346,16 @@ async def remove_song(ctx: SlashContext, number: int):
 
 ''' Spotify commmands '''
 
+
 @slash.slash(
-    name='authSpotify',
+    name='auth_spotify',
     description='Connects to spotify',
     guild_ids=guild_ids
 )
 async def authSpotify(ctx: SlashContext):
+    print("Attempting to authenticate")
     s = Spotify()
-    user_id = ctx.message.author.id
+    user_id = str(ctx.author)
     spotify_objects[user_id] = s
     await ctx.send(f'Authenticate Spotify here: {s.getAuthUrl()}. Follow sign-on instructions and once provided the key, execute: $$connectSpotify <key>')
 
@@ -355,7 +363,7 @@ async def authSpotify(ctx: SlashContext):
 
 # @bot.command(name='connectSpotify', help='Connects to spotify')
 @slash.slash(
-    name='connectSpotify',
+    name='connect_spotify',
     description='Connects to spotify with key from authSpotify link',
     options=[
         {
@@ -430,4 +438,5 @@ async def spotifyNow(ctx: SlashContext):
 
 
 
-
+if __name__=="__main__":
+    client.run(os.environ.get("DISCORD_TOKEN"))

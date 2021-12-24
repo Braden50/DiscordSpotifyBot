@@ -6,7 +6,7 @@ import random
 from bot import client
 
 codes = {}
-REDIRECT_URL = os.environ.get('SPOTIFY_REDIRECT_URI')
+REDIRECT_URL = os.environ.get('SPOTIPY_REDIRECT_URI')
 DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
 if REDIRECT_URL is None:
     raise Exception("No spotify redirect uri provided")
