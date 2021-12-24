@@ -4,6 +4,7 @@ import os
 from queue import Queue
 import random
 from bot import client
+import threading
 
 codes = {}
 REDIRECT_URL = os.environ.get('SPOTIPY_REDIRECT_URI')
@@ -52,7 +53,8 @@ def get_token(): # this method gets all users
 
 print('Starting bot')
 try:
-    client.run(DISCORD_TOKEN)
+    x = threading.Thread(target=client.run, args=(DISCORD_TOKEN,))
+    x.start()
 except:
     print("Bot failed")
 print('Quit')
