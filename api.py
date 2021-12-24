@@ -51,7 +51,10 @@ def get_token(): # this method gets all users
 
 
 print('Starting bot')
-client.run(DISCORD_TOKEN)
+try:
+    client.run(DISCORD_TOKEN)
+except:
+    print("Bot failed")
 print('Quit')
 
 # bot.loop.create_task(audio_player_task())
