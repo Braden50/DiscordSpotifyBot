@@ -407,7 +407,7 @@ async def getSpotifyObj(ctx: SlashContext):
     
 
 @slash.slash(
-    name='spotify now',
+    name='spotify_now',
     description='Adds the current song playing in spotify to queue',
     guild_ids=guild_ids
 )
