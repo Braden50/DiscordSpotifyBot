@@ -499,7 +499,10 @@ async def spotifyNext(ctx: SlashContext, n):
             sp.previous_track() # go to previous song
         except:
             break
-    await _play(ctx, m_queries=m_queries)
+    if len(m_queries) == 0:
+        await ctx.send(content='Unable to fetch any songs from Spotify')
+        return
+    await _play(ctx, query=m_queries[0], m_queries=m_queries)
 
 
 
