@@ -131,8 +131,7 @@ async def play(ctx: SlashContext, etc=None, *, query):
 
 async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
     # m_queries is a list of queries to add multiple songs via youtube search at a time
-    if not m_queries or len(m_queries) < 1:  # if m_queries None or an empty list, default to query
-        m_queries = [query]
+    m_queries = [query]
             
     player = await get_player_or_connect(ctx, reply=True)
     if player is None:
