@@ -478,7 +478,7 @@ async def spotifyNext(ctx: SlashContext, n):
     if s is None:  # spotify not authenticated yet
         return
     # ^ repeat code
-    m_query = []
+    m_queries = []
     pause = False
     for i in range(n):
         cs = s.sp.currently_playing()   # "current song"
@@ -488,7 +488,7 @@ async def spotifyNext(ctx: SlashContext, n):
         artist = cs['item']['artists'][0]['name']
         song_name = cs['item']['name']
         query = f"{song_name} by {artist} on {album}"
-        m_query.append(query)
+        m_queries.append(query)
         if i != n - 1:
             try:
                 sp.next_track() # skip to next song
@@ -499,7 +499,7 @@ async def spotifyNext(ctx: SlashContext, n):
             sp.previous_track() # go to previous song
         except:
             break
-    await _play(ctx, m_query=m_query)
+    await _play(ctx, m_queries=m_queries)
 
 
 
