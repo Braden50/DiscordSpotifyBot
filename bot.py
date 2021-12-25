@@ -4,6 +4,8 @@ import datetime
 import json
 import util
 import ui
+import random
+import requests
 from music import Song, Playlist, PlayerInstance
 from discord_slash import SlashCommand, SlashContext, ComponentContext
 from discord_slash.model import SlashCommandOptionType
@@ -15,6 +17,10 @@ slash = SlashCommand(client, sync_commands=True)
 guild_ids = {} #json.loads(os.environ.get('GUILD_IDS'))
 players = {} # players: dict[int, PlayerInstance] = {}
 spotify_objects = {}   # one for each user {userid:spotify}
+
+SPOTIPY_REDIRECT_URI = os.environ.get('SPOTIPY_REDIRECT_URI')
+if SPOTIPY_REDIRECT_URI is None:
+    raise Exception("No discord token provided")
 
 @client.event
 async def on_ready():
@@ -121,6 +127,9 @@ async def leave(ctx: SlashContext):
 )
 async def play(ctx: SlashContext, etc=None, *, query):
     await ctx.defer()
+    await _play(ctx, query)
+
+async def _play(ctx: SlashContext, etc=None, *, query):
     player = await get_player_or_connect(ctx, reply=True)
     if player is None:
         return
@@ -176,6 +185,7 @@ async def play(ctx: SlashContext, etc=None, *, query):
 
     # Otherwise resume playback
     await player.resume()
+
 
 @slash.slash(
     name='queue',
@@ -353,10 +363,13 @@ async def remove_song(ctx: SlashContext, number: int):
     guild_ids=guild_ids
 )
 async def authSpotify(ctx: SlashContext):
+    await ctx.defer()
     print("Attempting to authenticate")
     s = Spotify()
-    user_id = str(ctx.author)
+    # user_id = str(ctx.author)
+    user_id = str(ctx.author_id)
     spotify_objects[user_id] = s
+    await ctx.send(content=f"Check your DMs {getName(ctx)}")
     await ctx.author.send(f'Authenticate Spotify here: {s.getAuthUrl()}. Follow sign-on instructions and once provided the key, execute: $$connectSpotify <key>')
 
 
@@ -376,24 +389,26 @@ async def authSpotify(ctx: SlashContext):
     guild_ids=guild_ids
 )
 async def connectSpotify(ctx, key):
-    user_id = ctx.message.author.id
+    await ctx.defer()
+    print(f"author: {ctx.author}\nid: {ctx.author_id}")
+    user_id = str(ctx.author_id)
     if user_id not in spotify_objects:
-        await ctx.send('Error: First, you need to sign in and get a specialized access key by using "authSpotify" command')
+        await ctx.send(content='Error: First, you need to sign in and get a specialized access key by using "authSpotify" command')
         return
     # try:
-    url_with_token = requests.get(f"{website_url}token?key={key}").text
+    url_with_token = requests.get(f"{SPOTIPY_REDIRECT_URI}token?key={key}").text
     # except:
     #     print("connectSpotify: Key Error")
     s = spotify_objects[user_id]   # not checking if token needs refresh
     spotify_name = s.authenticate(url_with_token)
-    await ctx.send(f"Welcome {spotify_name}! Your spotify has been connected!")
+    await ctx.send(content=f"Welcome {spotify_name}! Your spotify has been connected!")
 
 
 
 async def getSpotifyObj(ctx: SlashContext):
-    user_id = ctx.message.author.id
+    user_id = str(ctx.author_id)
     if user_id not in spotify_objects:
-        await ctx.send('Error: You need to sign into your spotify first with "authSpotify" then "connectSpotify <key>"')
+        await ctx.send(content='Error: You need to sign into your spotify first with "authSpotify" then "connectSpotify <key>"')
         return None
     else:
         return spotify_objects[user_id]
@@ -420,21 +435,22 @@ async def getSpotifyObj(ctx: SlashContext):
     guild_ids=guild_ids
 )
 async def spotifyNow(ctx: SlashContext):
-    s = getSpotifyObj(ctx)
-    if s in None:  # spotify not authenticated yet
+    await ctx.defer()
+    s = await getSpotifyObj(ctx)
+    if s is None:  # spotify not authenticated yet
         return
     auth_url = s.getAuthUrl()
     name = s.authenticate(auth_url)
     cs = s.sp.currently_playing()   # "current song"
     if cs is None or cs['is_playing'] is False:
-        await ctx.send('Nothing is currently playing SILLY.')
+        await ctx.send(content='Nothing is currently playing SILLY.')
         return
     
     album = cs['item']['album']['name']
     artist = cs['item']['artists'][0]['name']
     song_name = cs['item']['name']
     query = f"{song_name} by {artist} on {album}"
-    await play(ctx, query=query)
+    await _play(ctx, query=query)
 
 
 
