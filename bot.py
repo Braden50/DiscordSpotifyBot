@@ -129,7 +129,11 @@ async def play(ctx: SlashContext, etc=None, *, query):
     await ctx.defer()
     await _play(ctx, query)
 
-async def _play(ctx: SlashContext, etc=None, *, query):
+async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
+    # m_queries is a list of queries to add multiple songs via youtube search at a time
+    if not m_queries or len(m_queries) < 1:  # if m_queries None or an empty list, default to query
+        m_queries = [query]
+            
     player = await get_player_or_connect(ctx, reply=True)
     if player is None:
         return
@@ -154,10 +158,12 @@ async def _play(ctx: SlashContext, etc=None, *, query):
         songs = await player.queue_url(query, requester_id)
     else:
         # Search YouTube and get first result
-        search = await util.youtube_extract_info(f'ytsearch1:{query}')
-        results = list(search['entries'])
-        url = 'https://youtu.be/' + results[0]['id']
-        songs = await player.queue_url(url, requester_id)
+        for temp_query in m_queries:
+            search = await util.youtube_extract_info(f'ytsearch1:{temp_query}')
+            results = list(search['entries'])
+            url = 'https://youtu.be/' + results[0]['id']
+            songs.append = await player.queue_url(url, requester_id)
+
 
     if len(songs) > 1:
         await ctx.send(
@@ -451,6 +457,49 @@ async def spotifyNow(ctx: SlashContext):
     song_name = cs['item']['name']
     query = f"{song_name} by {artist} on {album}"
     await _play(ctx, query=query)
+
+
+@slash.slash(
+    name='spotify_next',
+    description='Adds the next <n> songs in spotify queue to discord queue',
+    options=[
+        {
+            'name': 'n',
+            'description': '# of songs to add',
+            'type': SlashCommandOptionType.INTEGER,
+            'required': True
+        }
+    ],
+    guild_ids=guild_ids
+)
+async def spotifyNext(ctx: SlashContext, n):
+    await ctx.defer()
+    s = await getSpotifyObj(ctx)
+    if s is None:  # spotify not authenticated yet
+        return
+    # ^ repeat code
+    m_queries = []
+    pause = False
+    for i in range(n):
+        cs = s.sp.currently_playing()   # "current song"
+        if i==0 and not cs['is_playing']:
+            pause = True
+        album = cs['item']['album']['name']
+        artist = cs['item']['artists'][0]['name']
+        song_name = cs['item']['name']
+        query = f"{song_name} by {artist} on {album}"
+        m_queries.append(query)
+        if i != n - 1:
+            try:
+                sp.next_track() # skip to next song
+            except:
+                break
+    for i in range(n - 1):
+        try:
+            sp.previous_track() # go to previous song
+        except:
+            break
+    await _play(ctx, m_query=m_query)
 
 
 

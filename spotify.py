@@ -78,19 +78,40 @@ class Spotify:
         print(displayName, followers)
 
 if __name__=="__main__":
+    # testing below
     s = Spotify()
     auth_url = s.getAuthUrl()
-    name = s.authenticate(auth_url)
-    cs = s.sp.currently_playing()
-    if cs is None:
-        exit() # nothing playing rn
-    print(s.sp.currently_playing())
-    
-    album = cs['item']['album']['name']
-    artist = cs['item']['artists'][0]['name']
-    song_name = cs['item']['name']
-    is_playing = cs['is_playing']
-    print(f"{song_name} by {artist} on {album}. Is playing? {is_playing}")
+    n = 3
+    m_queries = []
+    for i in range(n):
+        cs = s.sp.currently_playing()   # "current song"
+        album = cs['item']['album']['name']
+        artist = cs['item']['artists'][0]['name']
+        song_name = cs['item']['name']
+        query = f"{song_name} by {artist} on {album}"
+        m_queries.append(query)
+        if i != n - 1:
+            s.sp.next_track() # skip to next song
+    for i in range(n - 1):
+        s.sp.previous_track() # go to previous song
+    print(m_queries)
+
+
+
+
+
+
+    # name = s.authenticate(auth_url)
+    # cs = s.sp.currently_playing()
+    # if cs is None:
+    #     exit() # nothing playing rn
+    # print(s.sp.currently_playing())
+    # try:
+    #     album = cs['item']['album']['name']
+    #     artist = cs['item']['artists'][0]['name']
+    #     song_name = cs['item']['name']
+    #     is_playing = cs['is_playing']
+    #     print(f"{song_name} by {artist} on {album}. Is playing? {is_playing}")
 
     
     # s.printUser()
