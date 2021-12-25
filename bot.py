@@ -482,6 +482,9 @@ async def spotifyNext(ctx: SlashContext, n):
     pause = False
     for i in range(n):
         cs = s.sp.currently_playing()   # "current song"
+        if not cs:
+            await ctx.send(content='Start playing something on Spotify')
+            return
         if i==0 and not cs['is_playing']:
             pause = True
         album = cs['item']['album']['name']
