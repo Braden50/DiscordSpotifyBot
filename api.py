@@ -3,45 +3,44 @@ from flask_cors import CORS
 import os
 import random
 
-codes = {}
-REDIRECT_URL = os.environ.get('SPOTIPY_REDIRECT_URI')
-
-if REDIRECT_URL is None:
-    raise Exception("No spotify redirect uri provided")
+DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
+if DISCORD_TOKEN is None:
+    raise Exception("No discord token provided")
+client.run(DISCORD_TOKEN)
 
 app = Flask(__name__)
 CORS(app)
 
 
-@app.route('/', methods=['GET', 'POST'])
-def redirect(): # this method gets all users
-    if request.method == 'GET':
-        print("GET")
-        code = request.args.get('code')
-        key = random.getrandbits(128)
-        final_url = f'{REDIRECT_URL}?code={code}'
-        codes[key] = final_url
-        return f"Key: {str(key)}"
+# @app.route('/', methods=['GET', 'POST'])
+# def redirect(): # this method gets all users
+#     if request.method == 'GET':
+#         print("GET")
+#         code = request.args.get('code')
+#         key = random.getrandbits(128)
+#         final_url = f'{REDIRECT_URL}?code={code}'
+#         codes[key] = final_url
+#         return f"Key: {str(key)}"
         
-    elif request.method == 'POST':
-        print("POST")
+#     elif request.method == 'POST':
+#         print("POST")
 
 
-@app.route('/token/', methods=['GET'])
-def get_token(): # this method gets all users
-    if request.method == 'GET':
-        print("GET")
-        key = request.args.get('key')
-        if key is None:
-            return "<h1>Are you lost?</h1>"
-        key = int(key)
-        if key not in codes:
-            "<h2>Invalid Key Provided</h2>"
-            # return f"<h1>{key}</h1>\n<h3>{codes}</h3>"
-        url = codes[key]  
-        del codes[key]
-        print(123, url)
-        return url
+# @app.route('/token/', methods=['GET'])
+# def get_token(): # this method gets all users
+#     if request.method == 'GET':
+#         print("GET")
+#         key = request.args.get('key')
+#         if key is None:
+#             return "<h1>Are you lost?</h1>"
+#         key = int(key)
+#         if key not in codes:
+#             "<h2>Invalid Key Provided</h2>"
+#             # return f"<h1>{key}</h1>\n<h3>{codes}</h3>"
+#         url = codes[key]  
+#         del codes[key]
+#         print(123, url)
+#         return url
 
 
 # print('Starting bot')
