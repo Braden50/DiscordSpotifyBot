@@ -158,6 +158,7 @@ async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
         songs = await player.queue_url(query, requester_id)
     else:
         # Search YouTube and get first result
+        print(m_queries)
         for temp_query in m_queries:
             search = await util.youtube_extract_info(f'ytsearch1:{temp_query}')
             results = list(search['entries'])
