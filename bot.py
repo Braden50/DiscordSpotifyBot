@@ -162,7 +162,8 @@ async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
             search = await util.youtube_extract_info(f'ytsearch1:{temp_query}')
             results = list(search['entries'])
             url = 'https://youtu.be/' + results[0]['id']
-            songs.append = await player.queue_url(url, requester_id)
+            song = await player.queue_url(url, requester_id)
+            songs.append(song)
 
 
     if len(songs) > 1:
