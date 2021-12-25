@@ -163,8 +163,8 @@ async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
             results = list(search['entries'])
             url = 'https://youtu.be/' + results[0]['id']
             print(temp_query, url)
-            song = await player.queue_url(url, requester_id)
-            songs.append(song)
+            temp_song = await player.queue_url(url, requester_id)
+            songs.append(temp_song)
 
 
     if len(songs) > 1:
