@@ -380,7 +380,13 @@ async def authSpotify(ctx: SlashContext):
     user_id = str(ctx.author_id)
     spotify_objects[user_id] = s
     await ctx.send(content=f"Check your DMs {getName(ctx)}")
-    await ctx.author.send(f'Authenticate Spotify here: {s.getAuthUrl()}. Follow sign-on instructions and once provided the key, execute: $$connectSpotify <key>')
+    await ctx.author.send(
+        'Spotify Auth Instructions:\n' +
+        '1. Follow the link below and sign into your spotify' +
+        '2. Confirm permissions to be re-routed' +
+        '3. Copy the given key from the re-routed webpage' +
+        '4. Use my /connectSpotify command with the key. (/connectSpotify <key>)' +
+        f'\n\nAuth URL: {s.getAuthUrl()}')
 
 
 
