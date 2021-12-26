@@ -382,10 +382,10 @@ async def authSpotify(ctx: SlashContext):
     await ctx.send(content=f"Check your DMs {getName(ctx)}")
     await ctx.author.send(
         'Spotify Auth Instructions:\n' +
-        '1. Follow the link below and sign into your spotify' +
-        '2. Confirm permissions to be re-routed' +
-        '3. Copy the given key from the re-routed webpage' +
-        '4. Use my /connectSpotify command with the key. (/connectSpotify <key>)' +
+        '1. Follow the link below and sign into your spotify\n' +
+        '2. Confirm permissions to be re-routed\n' +
+        '3. Copy the given key from the re-routed webpage\n' +
+        '4. Use my /connectSpotify command with the key. (/connectSpotify <key>)\n' +
         f'\n\nAuth URL: {s.getAuthUrl()}')
 
 
@@ -498,7 +498,11 @@ async def spotifyNext(ctx: SlashContext, n):
         initial_volume = s.sp.current_playback()['device']['volume_percent']
     except:
         initial_volume = 0
-    s.sp.volume(0)   # mute spotify so skipping isn't heard
+    try:
+        s.sp.volume(0)   # mute spotify so skipping isn't heard
+    except:  # likely no active device
+        await ctx.send(content='Error fetching playback, are you sure your spotify is active on a device?')
+        return
     for i in range(n):
         for _ in range(attempts):
             cs = s.sp.currently_playing()   # "current song"
