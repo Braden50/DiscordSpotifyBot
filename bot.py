@@ -111,7 +111,6 @@ async def leave(ctx: SlashContext):
     await ctx.voice_client.disconnect(force=True)
     players[voice_channel.id] = None
 
-    await ctx.send(content='Bye!')
 
 @slash.slash(
     name='play',
@@ -167,7 +166,7 @@ async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
             url = 'https://youtu.be/' + results[0]['id']
             print(temp_query, url)
             temp_song = await player.queue_url(url, requester_id)
-            songs.append(temp_song)
+            songs.append(temp_song[0])
 
 
     if len(songs) > 1:

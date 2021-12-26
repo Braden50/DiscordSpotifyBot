@@ -119,7 +119,6 @@ if __name__=="__main__":
             break
         query = f"{song_name} by {artist} on {album}"
         m_queries.append(query)
-        print(i, song_name)
         s.sp.next_track() # skip to next song
     for _ in range(num_previous):
         s.sp.previous_track() # go to previous song
@@ -127,7 +126,6 @@ if __name__=="__main__":
         s.sp.pause_playback()  # return to not playing
     s.sp.volume(initial_volume)
     print(m_queries)
-    print(cs)
 
 
 
