@@ -83,18 +83,51 @@ if __name__=="__main__":
     auth_url = s.getAuthUrl()
     n = 3
     m_queries = []
+    attempts = 4
+    temp_song_name = ""
+    num_previous = n
+    pause = False
+    new = True
+    try:
+        initial_volume = s.sp.current_playback()['device']['volume_percent']
+    except:
+        initial_volume = 0
+    s.sp.volume(0)   # mute spotify so skipping isn't heard
     for i in range(n):
-        cs = s.sp.currently_playing()   # "current song"
-        album = cs['item']['album']['name']
-        artist = cs['item']['artists'][0]['name']
-        song_name = cs['item']['name']
+        for _ in range(attempts):
+            cs = s.sp.currently_playing()   # "current song"
+            if not cs:
+                print('No current song playing')
+            if i == 0 and not cs['is_playing']:
+                pause = True
+            
+            album = cs['item']['album']['name']
+            artist = cs['item']['artists'][0]['name']
+            song_name = cs['item']['name']
+
+            if temp_song_name != song_name:
+                temp_song_name = song_name
+                new = True
+                break
+            else:  # need to wait for skip to go through
+                print(temp_song_name, song_name, "waiting")
+                time.sleep(1)
+                new = False
+        # Unable to yield new song
+        if not new:
+            num_previous = i
+            break
         query = f"{song_name} by {artist} on {album}"
         m_queries.append(query)
-        if i != n - 1:
-            s.sp.next_track() # skip to next song
-    for i in range(n - 1):
+        print(i, song_name)
+        s.sp.next_track() # skip to next song
+    for _ in range(num_previous):
         s.sp.previous_track() # go to previous song
+    if pause:
+        s.sp.pause_playback()  # return to not playing
+    s.sp.volume(initial_volume)
     print(m_queries)
+    print(cs)
 
 
 
