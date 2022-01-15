@@ -1,10 +1,8 @@
-# import appSecrets
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
 from spotipy.oauth2 import SpotifyClientCredentials
 import requests
-# from appSecrets import website_url
 import sys, time
 
 
@@ -44,7 +42,6 @@ class Spotify:
         return self.auth_manager.get_authorize_url()
     
     def authenticate(self, url, local=False):
-        # print(url)
         if local:
             pass # TODO
         else:
@@ -54,25 +51,10 @@ class Spotify:
         user = self.sp.current_user()
         displayName = user['display_name']
         return displayName
-        # spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
-            
-          
-
-        # "    spotipy.Spotify(auth_manager=auth_manager)
-        # self.token = spotipy.util.prompt_for_user_token(scope=scope_str, show_dialog=False)
-        # except:
-        #     os.remove(f".cache-{username}")
-        #     self.token = spotipy.util.prompt_for_user_token(scope=scope_str, show_dialog=False)
-        # self.sp = spotipy.Spotify(auth=self.token, auth_manager=auth_manager)
-        #
-        # 
-        # 
-        #  self.sp = spotipy.Spotify(auth_manager=auth_manager)
+    
     
     def printUser(self):
-        print(1, "HERE")
         user = self.sp.current_user()
-        print(2, "HERE")
         displayName = user['display_name']
         followers = user['followers']['total']
         print(displayName, followers)
@@ -125,7 +107,6 @@ if __name__=="__main__":
     if pause:
         s.sp.pause_playback()  # return to not playing
     s.sp.volume(initial_volume)
-    print(m_queries)
 
 
 

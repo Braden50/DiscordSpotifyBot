@@ -10,9 +10,9 @@ import time
 from music import Song, Playlist, PlayerInstance
 from discord_slash import SlashCommand, SlashContext, ComponentContext
 from discord_slash.model import SlashCommandOptionType
-
 from spotify import Spotify
-# print(discord.Intents().all())
+
+creator_name = "Braden50#7614"
 client = discord.Client(intents=discord.Intents().all())
 slash = SlashCommand(client, sync_commands=True)
 guild_ids = {} #json.loads(os.environ.get('GUILD_IDS'))
@@ -70,8 +70,8 @@ async def handle_component(ctx: ComponentContext):
 
 def getName(ctx: SlashContext):
     username = str(ctx.author)
-    if username =="Braden50#7614":
-        return random.choice(["Sensei", "Daddy", "Senpai", "Big Daddy B", "Ass Clapper",
+    if username == creator_name:
+        return random.choice(["Sensei", "Daddy", "Senpai", "Big Daddy B",
                               "xXo Silly oXx", "Everlasting Light"])
     return username.split("#")[0]
 
@@ -133,7 +133,6 @@ async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
     # m_queries is a list of queries to add multiple songs via youtube search at a time
     if not m_queries or len(m_queries) < 1:  # if m_queries None or an empty list, default to query
         m_queries = [query]
-    print("Start of _play, m_queries:", m_queries)
             
     player = await get_player_or_connect(ctx, reply=True)
     if player is None:
@@ -159,7 +158,6 @@ async def _play(ctx: SlashContext, etc=None, *, query, m_queries = None):
         songs = await player.queue_url(query, requester_id)
     else:
         # Search YouTube and get first result
-        print(m_queries)
         for temp_query in m_queries:
             search = await util.youtube_extract_info(f'ytsearch1:{temp_query}')
             results = list(search['entries'])
@@ -389,8 +387,6 @@ async def authSpotify(ctx: SlashContext):
         f'\n\nAuth URL: {s.getAuthUrl()}')
 
 
-
-# @bot.command(name='connectSpotify', help='Connects to spotify')
 @slash.slash(
     name='connect_spotify',
     description='Connects to spotify with key from authSpotify link',
@@ -411,14 +407,10 @@ async def connectSpotify(ctx, key):
     if user_id not in spotify_objects:
         await ctx.send(content='Error: First, you need to sign in and get a specialized access key by using "authSpotify" command')
         return
-    # try:
     url_with_token = requests.get(f"{SPOTIPY_REDIRECT_URI}token?key={key}").text
-    # except:
-    #     print("connectSpotify: Key Error")
     s = spotify_objects[user_id]   # not checking if token needs refresh
     spotify_name = s.authenticate(url_with_token)
     await ctx.send(content=f"Welcome {spotify_name}! Your spotify has been connected!")
-
 
 
 async def getSpotifyObj(ctx: SlashContext):
@@ -428,21 +420,6 @@ async def getSpotifyObj(ctx: SlashContext):
         return None
     else:
         return spotify_objects[user_id]
-
-
-
-# @bot.command(name='spotify', help='Connects to spotify')
-# async def spotifyCommands(ctx, command, **args):
-#     user_id = ctx.message.author.id
-#     if user_id not in spotify_objects:
-#         await ctx.send('Error: You need to sign into your spotify first with "authSpotify" then "connectSpotify <key>"')
-#         return
-#     s = spotify_objects[user_id]
-#     if command.lower() == "now":
-#         await playNow(ctx, s)
-#     else:
-#         await ctx.send('Spotify command not implemented')
-#     # TODO: check if token is still good
     
 
 @slash.slash(
@@ -540,7 +517,3 @@ async def spotifyNext(ctx: SlashContext, n):
     print(m_queries)
     await _play(ctx, query=m_queries[0], m_queries=m_queries)
 
-
-
-# if __name__=="__main__":
-#     client.run(os.environ.get("DISCORD_TOKEN"))
